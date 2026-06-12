@@ -1,8 +1,7 @@
-# application-operator
-// TODO(user): Add simple overview of use/purpose
+## 文档
+- 一个CRD + Crontroller的示例
+- 一次jj工具的体验 （https://github.com/jj-vcs/jj）
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
 
 ## Getting Started
 
