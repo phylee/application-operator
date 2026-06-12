@@ -8,4 +8,14 @@ layout:
 - go.kubebuilder.io/v4
 projectName: application-operator
 repo: github.com/phylee/application-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: lee.cn
+  group: apps
+  kind: Application
+  path: github.com/phylee/application-operator/api/v1
+  version: v1
 version: "3"
