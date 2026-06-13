@@ -17,45 +17,101 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// ApplicationSpec defines the desired state of Application
+// ApplicationSpec defines the desired state of Application.
 type ApplicationSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
-	// foo is an example field of Application. Edit application_types.go to remove/update
+	// Replicas is the desired number of pods managed by this Application.
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	// +kubebuilder:default=1
+	Replicas *int32 `json:"replicas,omitempty"`
+
+	// Template describes the pods that will be created.
+	Template ApplicationTemplate `json:"template"`
+}
+
+// ApplicationTemplate describes the pods that will be created.
+// Only the minimum fields needed by this operator are exposed to keep the
+// generated CRD small; expand the struct (or add kubebuilder markers) when
+// more pod knobs are required.
+type ApplicationTemplate struct {
+	// Containers is the list of application containers.
+	// +listType=map
+	// +listMapKey=name
+	Containers []ApplicationContainer `json:"containers"`
+}
+
+// ApplicationContainer is a slimmed-down container definition.
+type ApplicationContainer struct {
+	// Name must be unique within the pod.
+	Name string `json:"name"`
+
+	// Image is the container image (e.g. nginx:1.25).
+	Image string `json:"image"`
+
+	// Entrypoint array. Not executed within a shell.
+	// The container image's ENTRYPOINT is used if this is not provided.
+	// +optional
+	Command []string `json:"command,omitempty"`
+
+	// Arguments to the entrypoint.
+	// The container image's CMD is used if this is not provided.
+	// +optional
+	Args []string `json:"args,omitempty"`
+
+	// ImagePullPolicy defines how the image is pulled.
+	// One of Always, Never, IfNotPresent.
+	// Defaults to Always if the :latest tag is specified, or IfNotPresent otherwise.
+	// +optional
+	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
+
+	// Ports exposed by the container.
+	// +optional
+	Ports []corev1.ContainerPort `json:"ports,omitempty"`
+
+	// Env is the list of environment variables to set in the container.
+	// +optional
+	Env []corev1.EnvVar `json:"env,omitempty"`
+
+	// EnvFrom is the list of sources to populate environment variables in the container.
+	// +optional
+	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
+
+	// Resources describes the compute resource requirements (requests and limits).
+	// +optional
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+
+	// LivenessProbe checks if the container is alive.
+	// If not provided, no liveness probe is configured.
+	// +optional
+	LivenessProbe *corev1.Probe `json:"livenessProbe,omitempty"`
+
+	// ReadinessProbe checks if the container is ready to serve traffic.
+	// If not provided, no readiness probe is configured.
+	// +optional
+	ReadinessProbe *corev1.Probe `json:"readinessProbe,omitempty"`
 }
 
 // ApplicationStatus defines the observed state of Application.
 type ApplicationStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// For Kubernetes API conventions, see:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
-
-	// conditions represent the current state of the Application resource.
-	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
-	//
-	// Standard condition types include:
-	// - "Available": the resource is fully functional
-	// - "Progressing": the resource is being created or updated
-	// - "Degraded": the resource failed to reach or maintain its desired state
-	//
-	// The status of each condition is one of True, False, or Unknown.
+	// Conditions represent the latest available observations of the
+	// Application's current state.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// Replicas is the total number of non-terminated pods targeted by this
+	// Application (their labels match the selector).
+	// +optional
+	Replicas int32 `json:"replicas,omitempty"`
+
+	// ReadyReplicas is the number of pods targeted by this Application with a
+	// Ready condition.
+	// +optional
+	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
 }
 
 // +kubebuilder:object:root=true
