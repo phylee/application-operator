@@ -46,19 +46,29 @@ var _ = Describe("Application Controller", func() {
 			By("creating the custom resource for the Kind Application")
 			err := k8sClient.Get(ctx, typeNamespacedName, application)
 			if err != nil && errors.IsNotFound(err) {
+				replicas := int32(1)
 				resource := &appsv1.Application{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: appsv1.ApplicationSpec{
+						Replicas: &replicas,
+						Template: appsv1.ApplicationTemplate{
+							Containers: []appsv1.ApplicationContainer{
+								{
+									Name:  "nginx",
+									Image: "nginx:1.27-alpine",
+								},
+							},
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &appsv1.Application{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
@@ -77,8 +87,20 @@ var _ = Describe("Application Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
+
+			By("Verifying the Application status was updated")
+			Eventually(func(g Gomega) {
+				updated := &appsv1.Application{}
+				g.Expect(k8sClient.Get(ctx, typeNamespacedName, updated)).To(Succeed())
+				g.Expect(updated.Status.Replicas).To(BeNumerically(">", 0))
+				g.Expect(updated.Status.Conditions).NotTo(BeEmpty())
+				cond := updated.Status.Conditions[0]
+				g.Expect(cond.Type).To(Equal("Available"))
+				// Pods never become Ready in envtest (no kubelet), so
+				// the condition is expected to be False with PodsNotReady.
+				g.Expect(cond.Status).To(Equal(metav1.ConditionFalse))
+				g.Expect(cond.Reason).To(Equal("PodsNotReady"))
+			}, "10s", "500ms").Should(Succeed())
 		})
 	})
 })

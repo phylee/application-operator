@@ -148,12 +148,14 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	var ready int32
+	var running int32
 	for i := range podList.Items {
 		pod := &podList.Items[i]
 		// Only count non-terminating pods.
 		if pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodSucceeded {
 			continue
 		}
+		running++
 		for _, cond := range pod.Status.Conditions {
 			if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
 				ready++
@@ -162,7 +164,7 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 	}
 
-	app.Status.Replicas = int32(len(podList.Items))
+	app.Status.Replicas = running
 	app.Status.ReadyReplicas = ready
 
 	// Set Available condition.
