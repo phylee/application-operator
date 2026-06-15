@@ -1,15 +1,29 @@
 apiVersion: apps.lee.cn/v1
 kind: Application
 metadata:
+  name: nginx-sample
   labels:
     app.kubernetes.io/name: application-operator
     app.kubernetes.io/managed-by: kustomize
-  name: application-sample
+    app: nginx
 spec:
-  replicas: 1
-  template:
-    containers:
-      - name: nginx
-        image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/nginxinc/nginx-unprivileged:1.31-alpine
-        ports:
-          - containerPort: 80
+  deployment:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+      spec:
+        containers:
+          - name: nginx
+            image: nginx:1.14.2
+            ports:
+              - containerPort: 80
+  service:
+    type: NodePort
+    selector:
+      app: nginx
+    ports:
+      - port: 80
+        targetPort: 80
+        nodePort: 30080

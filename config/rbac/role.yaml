@@ -7,7 +7,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - pods
+  - services
   verbs:
   - create
   - delete
@@ -16,6 +16,30 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
 - apiGroups:
   - apps.lee.cn
   resources:
