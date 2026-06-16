@@ -37,6 +37,7 @@ import (
 
 	appsv1 "github.com/phylee/application-operator/api/v1"
 	"github.com/phylee/application-operator/internal/controller"
+	webhookv1 "github.com/phylee/application-operator/internal/webhook/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -184,6 +185,13 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "application")
 		os.Exit(1)
+	}
+	// nolint:goconst
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err := webhookv1.SetupApplicationWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "Failed to create webhook", "webhook", "Application")
+			os.Exit(1)
+		}
 	}
 	// +kubebuilder:scaffold:builder
 
